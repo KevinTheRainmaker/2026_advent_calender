@@ -10,7 +10,7 @@ import type {
 /**
  * Create a new Mandala
  */
-export async function createMandala(data: MandalaCreate): Promise<Mandala | null> {
+export async function createMandala(data: MandalaCreate): Promise<Mandala> {
   const { data: mandala, error } = await supabase
     .from('mandalas')
     .insert(data as any)
@@ -19,7 +19,11 @@ export async function createMandala(data: MandalaCreate): Promise<Mandala | null
 
   if (error) {
     console.error('Error creating mandala:', error)
-    return null
+    throw new Error(`Failed to create mandala: ${error.message}`)
+  }
+
+  if (!mandala) {
+    throw new Error('Mandala creation returned no data')
   }
 
   return mandala as Mandala

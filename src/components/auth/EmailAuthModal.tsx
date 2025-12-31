@@ -40,7 +40,8 @@ export function EmailAuthModal({ isOpen, onClose, mode }: EmailAuthModalProps) {
         options: {
           emailRedirectTo: `${import.meta.env.VITE_SITE_URL}/auth/callback`,
           data: {
-            marketing_consent: marketingConsent,
+            marketing_consent: mode === 'start' ? marketingConsent : false,
+            auth_mode: mode,
           },
         },
       })
