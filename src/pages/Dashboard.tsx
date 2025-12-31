@@ -29,6 +29,7 @@ export function Dashboard() {
       await loadMandala()
     } catch (error) {
       console.error('Failed to create mandala:', error)
+      alert('목표 생성에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setIsCreating(false)
     }
