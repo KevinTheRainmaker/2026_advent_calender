@@ -1,0 +1,1 @@
+export { generateAIReport } from './gemini'

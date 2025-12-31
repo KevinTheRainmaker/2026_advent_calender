@@ -17,6 +17,7 @@ import {
   Day11,
   Day12,
   Day13,
+  Day14,
 } from './pages'
 
 function App() {
@@ -139,6 +140,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Day13 />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/day/14"
+          element={
+            <ProtectedRoute>
+              <Day14 />
             </ProtectedRoute>
           }
         />
