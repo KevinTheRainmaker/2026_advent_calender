@@ -13,16 +13,16 @@ import type {
 export async function createMandala(data: MandalaCreate): Promise<Mandala | null> {
   const { data: mandala, error } = await supabase
     .from('mandalas')
-    .insert(data)
+    .insert(data as any)
     .select()
-    .single()
+    .single() as any
 
   if (error) {
     console.error('Error creating mandala:', error)
     return null
   }
 
-  return mandala
+  return mandala as Mandala
 }
 
 /**
@@ -37,14 +37,14 @@ export async function getMandala(
     .select('*')
     .eq('user_id', userId)
     .eq('year', year)
-    .single()
+    .single() as any
 
   if (error) {
     console.error('Error fetching mandala:', error)
     return null
   }
 
-  return data
+  return data as Mandala
 }
 
 /**
@@ -56,17 +56,17 @@ export async function updateMandala(
 ): Promise<Mandala | null> {
   const { data, error } = await supabase
     .from('mandalas')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
-    .single()
+    .single() as any
 
   if (error) {
     console.error('Error updating mandala:', error)
     return null
   }
 
-  return data
+  return data as Mandala
 }
 
 /**

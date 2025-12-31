@@ -1,15 +1,53 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { ProtectedRoute } from './components/auth'
+import { Landing, AuthCallback, Dashboard, Day1 } from './pages'
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-primary-600 mb-4">
-          2026 만다라트 목표 설계
-        </h1>
-        <p className="text-gray-600">
-          14일간의 여정이 곧 시작됩니다
-        </p>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Landing />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
+        {/* Protected Routes */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Day Routes */}
+        <Route
+          path="/day/1"
+          element={
+            <ProtectedRoute>
+              <Day1 />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Other day routes (will be implemented) */}
+        <Route
+          path="/day/:day"
+          element={
+            <ProtectedRoute>
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                    Day 페이지
+                  </h2>
+                  <p className="text-gray-600">곧 구현됩니다</p>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useMandalaStore } from './mandalaStore'
-import type { Mandala, AISummary } from '@/types'
+import type { Mandala } from '@/types'
 
 describe('mandalaStore', () => {
   const mockMandala: Mandala = {
