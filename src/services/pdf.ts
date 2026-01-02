@@ -130,32 +130,7 @@ export async function generateReportPDF(
 }
 
 /**
- * Helper function to wrap text to fit within a specified width
- */
-function wrapText(doc: jsPDF, text: string, x: number, y: number, maxWidth: number, lineHeight: number): number {
-  const words = text.split(' ')
-  let line = ''
-  let currentY = y
-
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + words[i] + ' '
-    const metrics = doc.getTextDimensions(testLine)
-
-    if (metrics.w > maxWidth && i > 0) {
-      doc.text(line.trim(), x, currentY)
-      line = words[i] + ' '
-      currentY += lineHeight
-    } else {
-      line = testLine
-    }
-  }
-
-  doc.text(line.trim(), x, currentY)
-  return currentY + lineHeight
-}
-
-/**
- * Generate designed Mandala PDF (not screenshot-based)
+ * Generate designed Mandala PDF with Korean text support
  */
 export async function generateMandalaPDF(
   element: HTMLElement | null,
@@ -163,6 +138,137 @@ export async function generateMandalaPDF(
   filename: string = 'mandala-chart.pdf'
 ): Promise<boolean> {
   try {
+    // Get mandala data
+    const centerGoal = mandala.center_goal || '핵심 목표'
+    const subGoals = mandala.sub_goals || []
+    const actionPlans = mandala.action_plans || {}
+    const keywords = mandala.ai_summary?.keywords || []
+
+    // Section colors (lighter tones)
+    const sectionColors = [
+      '#ADD8E6', // light blue
+      '#90EE90', // light green
+      '#FFFFE0', // light yellow
+      '#FFC0CB', // pink
+      '#DDA0DD', // plum
+      '#B0E0E6', // powder blue
+      '#FFB6C1', // light pink
+      '#FFDAB9', // peach
+      '#D8BFD8', // thistle
+    ]
+
+    // Create HTML template
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.width = '297mm' // A4 landscape width
+    container.style.height = '210mm' // A4 landscape height
+    container.style.backgroundColor = '#F5EFE6'
+    container.style.fontFamily = 'system-ui, -apple-system, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif'
+    container.style.padding = '20px'
+    container.style.boxSizing = 'border-box'
+    container.style.display = 'flex'
+    container.style.gap = '30px'
+
+    // Build grid HTML
+    let gridHTML = ''
+    for (let sectionRow = 0; sectionRow < 3; sectionRow++) {
+      for (let sectionCol = 0; sectionCol < 3; sectionCol++) {
+        const sectionIndex = sectionRow * 3 + sectionCol
+        const isCenter = sectionIndex === 4
+        const subGoalIndex = sectionIndex > 4 ? sectionIndex - 1 : sectionIndex
+        const subGoal = isCenter ? '' : (subGoals[subGoalIndex] || '세부 목표')
+        const plans = isCenter ? [] : (actionPlans[subGoalIndex.toString()] || [])
+        const bgColor = isCenter ? '#D4C5B0' : sectionColors[sectionIndex]
+
+        gridHTML += `<div style="background-color: ${bgColor}; border: 2px solid #666; position: relative; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 1px;">`
+
+        // Add section number
+        if (!isCenter) {
+          gridHTML += `<div style="position: absolute; top: 3px; left: 3px; font-size: 9px; color: #666; z-index: 10;">#${subGoalIndex + 1}</div>`
+        }
+
+        for (let cellRow = 0; cellRow < 3; cellRow++) {
+          for (let cellCol = 0; cellCol < 3; cellCol++) {
+            const cellIndex = cellRow * 3 + cellCol
+            const isCenterCell = cellIndex === 4
+
+            let cellContent = ''
+            let cellStyle = 'border: 1px solid #999; display: flex; align-items: center; justify-content: center; text-align: center; padding: 3px; background-color: white; min-height: 45px;'
+
+            if (isCenter && isCenterCell) {
+              cellContent = centerGoal
+              cellStyle += 'font-weight: bold; font-size: 11px;'
+            } else if (!isCenter && isCenterCell) {
+              cellContent = subGoal
+              cellStyle += 'font-weight: bold; font-size: 10px;'
+            } else if (!isCenter) {
+              const planIndex = cellIndex < 4 ? cellIndex : cellIndex - 1
+              cellContent = plans[planIndex] || ''
+              cellStyle += 'font-size: 9px;'
+            }
+
+            gridHTML += `<div style="${cellStyle}"><div style="word-break: keep-all; overflow-wrap: break-word;">${cellContent}</div></div>`
+          }
+        }
+        gridHTML += '</div>'
+      }
+    }
+
+    // Build full HTML
+    container.innerHTML = `
+      <div style="flex: 0 0 250px; color: #2D2D2D;">
+        <!-- Title Section -->
+        <div style="margin-bottom: 30px;">
+          <div style="font-size: 14px; margin-bottom: 8px;">이름 적는 곳</div>
+          <div style="font-size: 22px; font-weight: bold; margin-bottom: 8px;">
+            ${mandala.name || '의'}
+          </div>
+          <div style="font-size: 18px; font-weight: bold;">2026 만다라트</div>
+        </div>
+
+        <!-- Keywords Section -->
+        <div style="margin-bottom: 30px;">
+          <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">keyword</div>
+          <div style="font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
+            ${keywords.length > 0 ? keywords.slice(0, 3).join(', ') : '키워드 2~3개를 적어주세요!'}
+          </div>
+          <div style="border-bottom: 2px solid #2D2D2D; width: 200px;"></div>
+        </div>
+
+        <!-- Commitment Section -->
+        <div>
+          <div style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">다짐 한 마디!!</div>
+          <div style="font-size: 12px; line-height: 1.6; margin-bottom: 8px; word-break: keep-all;">
+            ${mandala.commitment || '2026년의 나님 한 말마로 적어주세요!'}
+          </div>
+          <div style="border-bottom: 2px solid #2D2D2D; width: 200px;"></div>
+        </div>
+      </div>
+
+      <!-- Mandala Grid -->
+      <div style="flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 8px;">
+        ${gridHTML}
+      </div>
+    `
+
+    // Append to body temporarily
+    document.body.appendChild(container)
+
+    // Convert to canvas with high quality
+    const canvas = await html2canvas(container, {
+      scale: 3,
+      backgroundColor: '#F5EFE6',
+      logging: false,
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+    })
+
+    // Remove temporary element
+    document.body.removeChild(container)
+
+    // Create PDF
+    const imgData = canvas.toDataURL('image/png')
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
@@ -172,186 +278,8 @@ export async function generateMandalaPDF(
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
 
-    // Colors
-    const bgColor = '#F5EFE6' // Beige background
-    const centerBgColor = '#D4C5B0' // Darker beige for center section
-    const textColor = '#2D2D2D'
-
-    // Draw beige background
-    doc.setFillColor(245, 239, 230)
-    doc.rect(0, 0, pageWidth, pageHeight, 'F')
-
-    // === LEFT PANEL ===
-    const leftPanelWidth = 80
-    const leftMargin = 10
-    let currentY = 20
-
-    // Title section
-    doc.setFontSize(10)
-    doc.setTextColor(45, 45, 45)
-    doc.text('이름 적는 곳', leftMargin, currentY)
-    currentY += 8
-
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    const nameText = mandala.name || '의'
-    doc.text(nameText, leftMargin, currentY)
-    currentY += 8
-
-    doc.setFontSize(14)
-    doc.text('2024 만다라트', leftMargin, currentY)
-    currentY += 15
-
-    // Keyword section
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('keyword', leftMargin, currentY)
-    currentY += 7
-
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    const keywords = mandala.ai_summary?.keywords || []
-    if (keywords.length > 0) {
-      const keywordsText = keywords.slice(0, 3).join(', ')
-      currentY = wrapText(doc, keywordsText, leftMargin, currentY, leftPanelWidth - 20, 5)
-    } else {
-      doc.text('키워드 2~3개를 적어주세요!', leftMargin, currentY)
-      currentY += 5
-    }
-
-    // Draw underline
-    doc.setDrawColor(45, 45, 45)
-    doc.line(leftMargin, currentY, leftMargin + 60, currentY)
-    currentY += 15
-
-    // Commitment section
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.text('다짐 한 마디!!', leftMargin, currentY)
-    currentY += 7
-
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    if (mandala.commitment) {
-      currentY = wrapText(doc, mandala.commitment, leftMargin, currentY, leftPanelWidth - 20, 5)
-    } else {
-      doc.text('2024년의 나님 한 말마로', leftMargin, currentY)
-      currentY += 5
-      doc.text('적어주세요!', leftMargin, currentY)
-      currentY += 5
-    }
-
-    // Draw underline
-    doc.line(leftMargin, currentY, leftMargin + 60, currentY)
-
-    // === MANDALA GRID ===
-    const gridStartX = leftPanelWidth + 20
-    const gridStartY = 20
-    const gridSize = 160 // Total grid size
-    const sectionSize = gridSize / 3 // Each 3x3 section
-    const cellSize = sectionSize / 3 // Each cell in a section
-
-    // Get mandala data
-    const centerGoal = mandala.center_goal || '핵심 목표'
-    const subGoals = mandala.sub_goals || []
-    const actionPlans = mandala.action_plans || {}
-
-    // Section colors (lighter tones)
-    const sectionColors = [
-      [173, 216, 230], // light blue
-      [144, 238, 144], // light green
-      [255, 255, 224], // light yellow
-      [255, 192, 203], // pink
-      [221, 160, 221], // plum
-      [176, 224, 230], // powder blue
-      [255, 182, 193], // light pink
-      [255, 218, 185], // peach
-      [216, 191, 216], // thistle
-    ]
-
-    // Draw 9x9 grid
-    for (let sectionRow = 0; sectionRow < 3; sectionRow++) {
-      for (let sectionCol = 0; sectionCol < 3; sectionCol++) {
-        const sectionIndex = sectionRow * 3 + sectionCol
-        const sectionX = gridStartX + sectionCol * sectionSize
-        const sectionY = gridStartY + sectionRow * sectionSize
-
-        // Determine if this is the center section
-        const isCenter = sectionIndex === 4
-
-        // Set section background color
-        if (isCenter) {
-          doc.setFillColor(212, 197, 176) // Darker beige for center
-        } else {
-          const color = sectionColors[sectionIndex]
-          doc.setFillColor(color[0], color[1], color[2])
-        }
-
-        // Draw section background
-        doc.rect(sectionX, sectionY, sectionSize, sectionSize, 'F')
-
-        // Draw section border
-        doc.setDrawColor(100, 100, 100)
-        doc.setLineWidth(0.5)
-        doc.rect(sectionX, sectionY, sectionSize, sectionSize, 'S')
-
-        // Draw cells within section
-        const subGoalIndex = sectionIndex > 4 ? sectionIndex - 1 : sectionIndex
-        const subGoal = isCenter ? '' : (subGoals[subGoalIndex] || `세부 목표`)
-        const plans = isCenter ? [] : (actionPlans[subGoalIndex.toString()] || [])
-
-        for (let cellRow = 0; cellRow < 3; cellRow++) {
-          for (let cellCol = 0; cellCol < 3; cellCol++) {
-            const cellX = sectionX + cellCol * cellSize
-            const cellY = sectionY + cellRow * cellSize
-            const cellIndex = cellRow * 3 + cellCol
-            const isCenterCell = cellIndex === 4
-
-            // Draw cell border
-            doc.setDrawColor(150, 150, 150)
-            doc.setLineWidth(0.2)
-            doc.rect(cellX, cellY, cellSize, cellSize, 'S')
-
-            // Add text
-            doc.setFontSize(7)
-            doc.setTextColor(45, 45, 45)
-
-            if (isCenter && isCenterCell) {
-              // Center of center section - main goal
-              doc.setFont('helvetica', 'bold')
-              doc.setFontSize(8)
-              const lines = doc.splitTextToSize(centerGoal, cellSize - 2)
-              const textY = cellY + cellSize / 2 - (lines.length * 2.5) + 3
-              doc.text(lines, cellX + cellSize / 2, textY, { align: 'center' })
-            } else if (!isCenter && isCenterCell) {
-              // Center of outer sections - sub goal
-              doc.setFont('helvetica', 'bold')
-              const lines = doc.splitTextToSize(subGoal, cellSize - 2)
-              const textY = cellY + cellSize / 2 - (lines.length * 2.5) + 3
-              doc.text(lines, cellX + cellSize / 2, textY, { align: 'center' })
-            } else if (!isCenter) {
-              // Outer cells - action plans
-              const planIndex = cellIndex < 4 ? cellIndex : cellIndex - 1
-              const plan = plans[planIndex] || ''
-              if (plan) {
-                doc.setFont('helvetica', 'normal')
-                const lines = doc.splitTextToSize(plan, cellSize - 2)
-                const textY = cellY + cellSize / 2 - (lines.length * 2.5) + 3
-                doc.text(lines, cellX + cellSize / 2, textY, { align: 'center' })
-              }
-            }
-          }
-        }
-
-        // Add section number label for non-center sections
-        if (!isCenter) {
-          doc.setFontSize(6)
-          doc.setFont('helvetica', 'normal')
-          doc.setTextColor(100, 100, 100)
-          doc.text(`#${subGoalIndex + 1}`, sectionX + 2, sectionY + 4)
-        }
-      }
-    }
+    // Add image to fit page
+    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight)
 
     // Save PDF
     doc.save(filename)
