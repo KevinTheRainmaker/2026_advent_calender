@@ -146,18 +146,19 @@ export async function generateMandalaPDF(
     const wrapper = document.createElement('div')
     wrapper.style.position = 'absolute'
     wrapper.style.left = '-9999px'
-    wrapper.style.backgroundColor = '#f3f4f6'
-    wrapper.style.padding = '30px'
+    wrapper.style.backgroundColor = '#fef3c7' // amber-50
+    wrapper.style.padding = '40px'
     wrapper.style.fontFamily = 'system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif'
+    wrapper.style.width = '800px'
 
-    // Add title and center goal
+    // Add title
     wrapper.innerHTML = `
-      <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="font-size: 32px; font-weight: bold; color: #111827; margin-bottom: 15px;">
-          만다라트 9×9 계획서
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-size: 36px; font-weight: bold; color: #111827; margin-bottom: 10px;">
+          만다라트 목표 계획서
         </h1>
-        <p style="font-size: 18px; color: #374151; font-weight: 500;">
-          중심 목표: ${mandala.center_goal || '목표 미설정'}
+        <p style="font-size: 14px; color: #6b7280;">
+          생성일: ${new Date().toLocaleDateString('ko-KR')}
         </p>
       </div>
     `
@@ -172,8 +173,9 @@ export async function generateMandalaPDF(
     // Capture the entire wrapper as canvas
     const canvas = await html2canvas(wrapper, {
       scale: 2,
-      backgroundColor: '#f3f4f6',
+      backgroundColor: '#fef3c7',
       logging: false,
+      width: wrapper.offsetWidth,
     })
 
     // Remove temporary element
@@ -185,7 +187,7 @@ export async function generateMandalaPDF(
 
     // Create PDF
     const doc = new jsPDF({
-      orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
+      orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
     })
@@ -194,13 +196,13 @@ export async function generateMandalaPDF(
     const pageHeight = doc.internal.pageSize.getHeight()
 
     // Calculate image dimensions to fit page
-    let finalWidth = pageWidth
-    let finalHeight = (imgHeight * pageWidth) / imgWidth
+    let finalWidth = pageWidth - 20 // 10mm margin on each side
+    let finalHeight = (imgHeight * finalWidth) / imgWidth
 
     // If height is too large, scale by height instead
-    if (finalHeight > pageHeight) {
-      finalHeight = pageHeight
-      finalWidth = (imgWidth * pageHeight) / imgHeight
+    if (finalHeight > pageHeight - 20) {
+      finalHeight = pageHeight - 20
+      finalWidth = (imgWidth * finalHeight) / imgHeight
     }
 
     const xPosition = (pageWidth - finalWidth) / 2
