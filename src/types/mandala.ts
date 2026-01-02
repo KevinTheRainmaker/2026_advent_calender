@@ -49,6 +49,10 @@ export interface Mandala {
   // Day 14: AI Summary
   ai_summary: AISummary | null
 
+  // Mandala Chart Display
+  name: string | null
+  commitment: string | null
+
   // Progress Tracking
   current_day: number // 1-14
   completed_days: number[]
@@ -75,6 +79,8 @@ export interface MandalaUpdate {
   sub_goals?: string[]
   action_plans?: ActionPlans
   ai_summary?: AISummary
+  name?: string
+  commitment?: string
   current_day?: number
   completed_days?: number[]
 }

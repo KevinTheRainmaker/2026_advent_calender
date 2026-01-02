@@ -1,97 +1,135 @@
+import { useState } from 'react'
 import type { Mandala } from '@/types'
+import { useMandala } from '@/hooks'
+import { useAuth } from '@/hooks'
 
 interface MandalaGridProps {
   mandala: Mandala
 }
 
 export function MandalaGrid({ mandala }: MandalaGridProps) {
-  const { center_goal, sub_goals, action_plans } = mandala
+  const { user } = useAuth()
+  const { updateMandala } = useMandala(user?.id)
+  const { center_goal, sub_goals, ai_summary, name, commitment } = mandala
 
-  const getActionPlans = (index: number): string[] => {
-    const plans = action_plans[index.toString()] || []
-    return Array.from({ length: 8 }, (_, i) => plans[i] || '')
+  const [editableName, setEditableName] = useState(name || '')
+  const [editableCommitment, setEditableCommitment] = useState(commitment || '')
+
+  const handleNameChange = (value: string) => {
+    setEditableName(value)
   }
 
-  const getSubGoal = (index: number): string => sub_goals[index] || ''
+  const handleCommitmentChange = (value: string) => {
+    setEditableCommitment(value)
+  }
 
-  const sectionColors = [
-    'bg-blue-50 border-blue-200',
-    'bg-green-50 border-green-200',
-    'bg-yellow-50 border-yellow-200',
-    'bg-pink-50 border-pink-200',
-    'bg-purple-50 border-purple-200',
-    'bg-indigo-50 border-indigo-200',
-    'bg-red-50 border-red-200',
-    'bg-orange-50 border-orange-200',
-    'bg-teal-50 border-teal-200',
-  ]
+  const handleNameBlur = async () => {
+    if (editableName !== name) {
+      await updateMandala({ name: editableName })
+    }
+  }
 
-  const renderSection = (sectionIndex: number) => {
-    const isCenter = sectionIndex === 4
-    const subGoalIndex = sectionIndex > 4 ? sectionIndex - 1 : sectionIndex
-    const colorClass = sectionColors[sectionIndex]
+  const handleCommitmentBlur = async () => {
+    if (editableCommitment !== commitment) {
+      await updateMandala({ commitment: editableCommitment })
+    }
+  }
 
-    if (isCenter) {
-      return (
+  // Get keywords from AI summary
+  const keywords = ai_summary?.keywords || []
+
+  // Arrange sub-goals in 3x3 grid pattern (center is center_goal, rest are sub_goals)
+  // Grid positions: 0,1,2,3,4,5,6,7,8
+  // Position 4 (center) = center goal
+  // Positions 0,1,2,3,5,6,7,8 = sub goals (8 total)
+  const getGridCell = (position: number): string => {
+    if (position === 4) {
+      return center_goal || '중심 목표'
+    }
+    // Map grid position to sub_goal index
+    const subGoalIndex = position < 4 ? position : position - 1
+    return sub_goals[subGoalIndex] || `하위 목표 ${subGoalIndex + 1}`
+  }
+
+  return (
+    <div className="w-full max-w-3xl mx-auto bg-amber-50 p-8 rounded-lg">
+      {/* Name Input */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          이름
+        </label>
+        <input
+          type="text"
+          value={editableName}
+          onChange={(e) => handleNameChange(e.target.value)}
+          onBlur={handleNameBlur}
+          placeholder="이름을 입력하세요"
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
+        />
+      </div>
+
+      {/* Keywords Display */}
+      {keywords.length > 0 && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            핵심 키워드
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {keywords.map((keyword, index) => (
+              <span
+                key={index}
+                className="bg-amber-200 text-amber-900 px-3 py-1 rounded-full text-sm font-medium"
+              >
+                {keyword}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3x3 Mandala Grid */}
+      <div className="mb-6">
         <div
-          key={sectionIndex}
-          data-testid="mandala-section"
-          className={`grid grid-cols-3 grid-rows-3 gap-0.5 ${colorClass} border-2 p-1`}
+          data-testid="mandala-grid"
+          className="grid grid-cols-3 grid-rows-3 gap-2 bg-white p-4 rounded-lg border-2 border-gray-300"
         >
-          {Array.from({ length: 9 }).map((_, cellIndex) => {
-            const isCenterCell = cellIndex === 4
+          {Array.from({ length: 9 }).map((_, position) => {
+            const isCenter = position === 4
+            const cellContent = getGridCell(position)
+
             return (
               <div
-                key={cellIndex}
-                data-testid={isCenterCell ? 'center-cell' : 'mandala-cell'}
-                className={`border border-gray-300 p-1 flex items-center justify-center text-center min-h-[3rem] break-words ${
-                  isCenterCell ? 'bg-primary-500 text-white font-bold text-sm' : 'bg-white text-xs'
-                }`}
+                key={position}
+                data-testid={isCenter ? 'center-cell' : 'mandala-cell'}
+                className={`
+                  border-2 rounded-lg p-4 flex items-center justify-center text-center min-h-[100px]
+                  ${
+                    isCenter
+                      ? 'bg-amber-500 text-white font-bold text-base border-amber-600'
+                      : 'bg-white text-gray-800 font-medium text-sm border-gray-300'
+                  }
+                `}
               >
-                {isCenterCell && center_goal}
+                <div className="break-words w-full">{cellContent}</div>
               </div>
             )
           })}
         </div>
-      )
-    }
-
-    const subGoal = getSubGoal(subGoalIndex)
-    const plans = getActionPlans(subGoalIndex)
-
-    return (
-      <div
-        key={sectionIndex}
-        data-testid="mandala-section"
-        className={`grid grid-cols-3 grid-rows-3 gap-0.5 ${colorClass} border-2 p-1`}
-      >
-        {Array.from({ length: 9 }).map((_, cellIndex) => {
-          const isCenterCell = cellIndex === 4
-          const planIndex = cellIndex < 4 ? cellIndex : cellIndex - 1
-          const plan = plans[planIndex] || ''
-          return (
-            <div
-              key={cellIndex}
-              data-testid="mandala-cell"
-              className={`border border-gray-300 p-1 flex items-center justify-center text-center min-h-[3rem] break-words ${
-                isCenterCell ? 'bg-gray-700 text-white font-semibold text-xs' : 'bg-white text-xs'
-              }`}
-            >
-              {isCenterCell ? subGoal : plan}
-            </div>
-          )
-        })}
       </div>
-    )
-  }
 
-  return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div
-        data-testid="mandala-grid"
-        className="grid grid-cols-3 grid-rows-3 gap-2 bg-gray-100 p-4 rounded-lg"
-      >
-        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(renderSection)}
+      {/* Commitment Input */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          다짐
+        </label>
+        <textarea
+          value={editableCommitment}
+          onChange={(e) => handleCommitmentChange(e.target.value)}
+          onBlur={handleCommitmentBlur}
+          placeholder="올해의 다짐을 입력하세요"
+          rows={3}
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none"
+        />
       </div>
     </div>
   )
