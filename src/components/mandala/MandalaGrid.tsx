@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Mandala, MandalaUpdate } from '@/types'
+import { updateMandala as updateMandalaApi } from '@/lib/api'
 
 interface MandalaGridProps {
   mandala: Mandala
@@ -11,6 +12,7 @@ export function MandalaGrid({ mandala, onUpdate }: MandalaGridProps) {
 
   const [editableName, setEditableName] = useState(name || '')
   const [editableCommitment, setEditableCommitment] = useState(commitment || '')
+  const [isSaving, setIsSaving] = useState(false)
 
   // Sync local state with prop changes
   useEffect(() => {
@@ -30,14 +32,34 @@ export function MandalaGrid({ mandala, onUpdate }: MandalaGridProps) {
   }
 
   const handleNameBlur = async () => {
-    if (editableName !== name && onUpdate) {
-      await onUpdate({ name: editableName })
+    if (editableName !== name && mandala.id) {
+      setIsSaving(true)
+      try {
+        // Update directly via API to avoid triggering global loading state
+        await updateMandalaApi(mandala.id, { name: editableName })
+      } catch (error) {
+        console.error('Failed to update name:', error)
+        // Revert on error
+        setEditableName(name || '')
+      } finally {
+        setIsSaving(false)
+      }
     }
   }
 
   const handleCommitmentBlur = async () => {
-    if (editableCommitment !== commitment && onUpdate) {
-      await onUpdate({ commitment: editableCommitment })
+    if (editableCommitment !== commitment && mandala.id) {
+      setIsSaving(true)
+      try {
+        // Update directly via API to avoid triggering global loading state
+        await updateMandalaApi(mandala.id, { commitment: editableCommitment })
+      } catch (error) {
+        console.error('Failed to update commitment:', error)
+        // Revert on error
+        setEditableCommitment(commitment || '')
+      } finally {
+        setIsSaving(false)
+      }
     }
   }
 
@@ -127,15 +149,16 @@ export function MandalaGrid({ mandala, onUpdate }: MandalaGridProps) {
       {/* Name Input */}
       <div className="bg-white rounded-lg border-2 border-gray-200 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          이름
+          이름 {isSaving && <span className="text-xs text-gray-500">(저장 중...)</span>}
         </label>
         <input
           type="text"
           value={editableName}
           onChange={(e) => handleNameChange(e.target.value)}
           onBlur={handleNameBlur}
+          disabled={isSaving}
           placeholder="이름을 입력하세요"
-          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none"
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -171,15 +194,16 @@ export function MandalaGrid({ mandala, onUpdate }: MandalaGridProps) {
       {/* Commitment Input */}
       <div className="bg-white rounded-lg border-2 border-gray-200 p-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          다짐
+          다짐 {isSaving && <span className="text-xs text-gray-500">(저장 중...)</span>}
         </label>
         <textarea
           value={editableCommitment}
           onChange={(e) => handleCommitmentChange(e.target.value)}
           onBlur={handleCommitmentBlur}
+          disabled={isSaving}
           placeholder="올해의 다짐을 입력하세요"
           rows={3}
-          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none"
+          className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-primary-500 focus:outline-none resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
       </div>
     </div>
