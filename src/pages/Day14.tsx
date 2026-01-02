@@ -184,7 +184,7 @@ export function Day14() {
           {aiReport && (
             <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                만다라트 목표 계획서
+                만다라트 9×9 그리드
               </h3>
               <p className="text-sm text-gray-600 mb-4">
                 이름과 다짐을 입력하고 PDF로 저장하세요.

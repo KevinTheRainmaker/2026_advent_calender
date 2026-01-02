@@ -146,20 +146,21 @@ export async function generateMandalaPDF(
     const wrapper = document.createElement('div')
     wrapper.style.position = 'absolute'
     wrapper.style.left = '-9999px'
-    wrapper.style.backgroundColor = '#fef3c7' // amber-50
-    wrapper.style.padding = '40px'
+    wrapper.style.backgroundColor = '#ffffff'
+    wrapper.style.padding = '30px'
     wrapper.style.fontFamily = 'system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif'
-    wrapper.style.width = '800px'
+    wrapper.style.width = '1200px'
 
-    // Add title
+    // Add title and center goal
     wrapper.innerHTML = `
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="font-size: 36px; font-weight: bold; color: #111827; margin-bottom: 10px;">
-          만다라트 목표 계획서
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="font-size: 32px; font-weight: bold; color: #111827; margin-bottom: 15px;">
+          만다라트 9×9 계획서
         </h1>
-        <p style="font-size: 14px; color: #6b7280;">
-          생성일: ${new Date().toLocaleDateString('ko-KR')}
+        <p style="font-size: 18px; color: #374151; font-weight: 500;">
+          중심 목표: ${mandala.center_goal || '목표 미설정'}
         </p>
+        ${mandala.name ? `<p style="font-size: 16px; color: #6b7280; margin-top: 10px;">이름: ${mandala.name}</p>` : ''}
       </div>
     `
 
@@ -167,13 +168,27 @@ export async function generateMandalaPDF(
     const mandalaClone = element.cloneNode(true) as HTMLElement
     wrapper.appendChild(mandalaClone)
 
+    // Add commitment if exists
+    if (mandala.commitment) {
+      const commitmentDiv = document.createElement('div')
+      commitmentDiv.style.marginTop = '20px'
+      commitmentDiv.style.padding = '15px'
+      commitmentDiv.style.backgroundColor = '#f3f4f6'
+      commitmentDiv.style.borderRadius = '8px'
+      commitmentDiv.innerHTML = `
+        <p style="font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">다짐</p>
+        <p style="font-size: 14px; color: #6b7280; line-height: 1.6;">${mandala.commitment}</p>
+      `
+      wrapper.appendChild(commitmentDiv)
+    }
+
     // Append to body temporarily
     document.body.appendChild(wrapper)
 
     // Capture the entire wrapper as canvas
     const canvas = await html2canvas(wrapper, {
       scale: 2,
-      backgroundColor: '#fef3c7',
+      backgroundColor: '#ffffff',
       logging: false,
       width: wrapper.offsetWidth,
     })
@@ -185,9 +200,9 @@ export async function generateMandalaPDF(
     const imgWidth = canvas.width
     const imgHeight = canvas.height
 
-    // Create PDF
+    // Create PDF - use landscape if needed
     const doc = new jsPDF({
-      orientation: 'portrait',
+      orientation: imgWidth > imgHeight ? 'landscape' : 'portrait',
       unit: 'mm',
       format: 'a4',
     })
@@ -196,7 +211,7 @@ export async function generateMandalaPDF(
     const pageHeight = doc.internal.pageSize.getHeight()
 
     // Calculate image dimensions to fit page
-    let finalWidth = pageWidth - 20 // 10mm margin on each side
+    let finalWidth = pageWidth - 20
     let finalHeight = (imgHeight * finalWidth) / imgWidth
 
     // If height is too large, scale by height instead
