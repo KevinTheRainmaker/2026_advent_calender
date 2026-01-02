@@ -10,6 +10,89 @@ export async function generateReportPDF(
   filename: string = 'mandala-report.pdf'
 ): Promise<boolean> {
   try {
+    // Create temporary HTML element for rendering
+    const container = document.createElement('div')
+    container.style.position = 'absolute'
+    container.style.left = '-9999px'
+    container.style.width = '210mm' // A4 width
+    container.style.padding = '20mm'
+    container.style.backgroundColor = 'white'
+    container.style.fontFamily = 'system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif'
+
+    // Build HTML content
+    container.innerHTML = `
+      <div style="color: #1f2937;">
+        <!-- Title -->
+        <h1 style="text-align: center; font-size: 28px; font-weight: bold; margin-bottom: 10px; color: #111827;">
+          만다라트 종합 리포트
+        </h1>
+        <p style="text-align: center; font-size: 12px; color: #6b7280; margin-bottom: 30px;">
+          생성일: ${new Date().toLocaleDateString('ko-KR')}
+        </p>
+
+        <!-- Section 1: 회고 요약 -->
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #111827; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">
+            1. 회고 요약
+          </h2>
+          <p style="font-size: 13px; line-height: 1.8; color: #374151; white-space: pre-wrap;">
+            ${aiSummary.reflection_summary || '회고 요약이 없습니다.'}
+          </p>
+        </div>
+
+        <!-- Section 2: 목표 구조 분석 -->
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #111827; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">
+            2. 목표 구조 분석
+          </h2>
+          <p style="font-size: 13px; line-height: 1.8; color: #374151; white-space: pre-wrap;">
+            ${aiSummary.goal_analysis || '목표 분석이 없습니다.'}
+          </p>
+        </div>
+
+        <!-- Section 3: 핵심 키워드 -->
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #111827; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">
+            3. 핵심 키워드
+          </h2>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+            ${(aiSummary.keywords || []).map(kw => `
+              <span style="background-color: #dbeafe; color: #1e40af; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">
+                ${kw}
+              </span>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Section 4: 통합 인사이트 -->
+        <div style="margin-bottom: 25px;">
+          <h2 style="font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #111827; border-bottom: 2px solid #3b82f6; padding-bottom: 5px;">
+            4. 통합 인사이트
+          </h2>
+          <p style="font-size: 13px; line-height: 1.8; color: #374151; white-space: pre-wrap;">
+            ${aiSummary.insights || '인사이트가 없습니다.'}
+          </p>
+        </div>
+      </div>
+    `
+
+    // Append to body temporarily
+    document.body.appendChild(container)
+
+    // Convert to canvas
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: container.offsetWidth,
+      windowWidth: container.offsetWidth,
+    })
+
+    // Remove temporary element
+    document.body.removeChild(container)
+
+    // Create PDF
+    const imgData = canvas.toDataURL('image/png')
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -18,103 +101,24 @@ export async function generateReportPDF(
 
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 20
-    const contentWidth = pageWidth - 2 * margin
-    let yPosition = margin
 
-    // Title
-    doc.setFontSize(24)
-    doc.setFont('helvetica', 'bold')
-    doc.text('만다라트 종합 리포트', pageWidth / 2, yPosition, { align: 'center' })
-    yPosition += 15
+    // Calculate image dimensions
+    const imgWidth = pageWidth
+    const imgHeight = (canvas.height * pageWidth) / canvas.width
 
-    // Date
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    const today = new Date().toLocaleDateString('ko-KR')
-    doc.text(`생성일: ${today}`, pageWidth / 2, yPosition, { align: 'center' })
-    yPosition += 15
+    // Add image to PDF (split into pages if needed)
+    let heightLeft = imgHeight
+    let position = 0
 
-    // Section 1: 회고 요약
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('1. 회고 요약', margin, yPosition)
-    yPosition += 10
+    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
 
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    const reflectionLines = doc.splitTextToSize(
-      aiSummary.reflection_summary || '회고 요약이 없습니다.',
-      contentWidth
-    )
-    doc.text(reflectionLines, margin, yPosition)
-    yPosition += reflectionLines.length * 7 + 10
-
-    // Check if we need a new page
-    if (yPosition > pageHeight - 60) {
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight
       doc.addPage()
-      yPosition = margin
+      doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
     }
-
-    // Section 2: 목표 구조 분석
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('2. 목표 구조 분석', margin, yPosition)
-    yPosition += 10
-
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    const goalLines = doc.splitTextToSize(
-      aiSummary.goal_analysis || '목표 분석이 없습니다.',
-      contentWidth
-    )
-    doc.text(goalLines, margin, yPosition)
-    yPosition += goalLines.length * 7 + 10
-
-    // Check if we need a new page
-    if (yPosition > pageHeight - 60) {
-      doc.addPage()
-      yPosition = margin
-    }
-
-    // Section 3: 핵심 키워드
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('3. 핵심 키워드', margin, yPosition)
-    yPosition += 10
-
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    const keywords = aiSummary.keywords || []
-    if (keywords.length > 0) {
-      const keywordText = keywords.map((kw, idx) => `${idx + 1}. ${kw}`).join('\n')
-      const keywordLines = doc.splitTextToSize(keywordText, contentWidth)
-      doc.text(keywordLines, margin, yPosition)
-      yPosition += keywordLines.length * 7 + 10
-    } else {
-      doc.text('키워드가 없습니다.', margin, yPosition)
-      yPosition += 17
-    }
-
-    // Check if we need a new page
-    if (yPosition > pageHeight - 60) {
-      doc.addPage()
-      yPosition = margin
-    }
-
-    // Section 4: 통합 인사이트
-    doc.setFontSize(16)
-    doc.setFont('helvetica', 'bold')
-    doc.text('4. 통합 인사이트', margin, yPosition)
-    yPosition += 10
-
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    const insightLines = doc.splitTextToSize(
-      aiSummary.insights || '인사이트가 없습니다.',
-      contentWidth
-    )
-    doc.text(insightLines, margin, yPosition)
 
     // Save PDF
     doc.save(filename)
@@ -138,12 +142,42 @@ export async function generateMandalaPDF(
   }
 
   try {
-    // Capture the element as canvas
-    const canvas = await html2canvas(element, {
+    // Create a wrapper with title
+    const wrapper = document.createElement('div')
+    wrapper.style.position = 'absolute'
+    wrapper.style.left = '-9999px'
+    wrapper.style.backgroundColor = '#f3f4f6'
+    wrapper.style.padding = '30px'
+    wrapper.style.fontFamily = 'system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif'
+
+    // Add title and center goal
+    wrapper.innerHTML = `
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="font-size: 32px; font-weight: bold; color: #111827; margin-bottom: 15px;">
+          만다라트 9×9 계획서
+        </h1>
+        <p style="font-size: 18px; color: #374151; font-weight: 500;">
+          중심 목표: ${mandala.center_goal || '목표 미설정'}
+        </p>
+      </div>
+    `
+
+    // Clone the mandala element and append
+    const mandalaClone = element.cloneNode(true) as HTMLElement
+    wrapper.appendChild(mandalaClone)
+
+    // Append to body temporarily
+    document.body.appendChild(wrapper)
+
+    // Capture the entire wrapper as canvas
+    const canvas = await html2canvas(wrapper, {
       scale: 2,
       backgroundColor: '#f3f4f6',
       logging: false,
     })
+
+    // Remove temporary element
+    document.body.removeChild(wrapper)
 
     const imgData = canvas.toDataURL('image/png')
     const imgWidth = canvas.width
@@ -158,35 +192,19 @@ export async function generateMandalaPDF(
 
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 15
-
-    // Title
-    let yPosition = margin
-    doc.setFontSize(20)
-    doc.setFont('helvetica', 'bold')
-    doc.text('만다라트 9×9 계획서', pageWidth / 2, yPosition, { align: 'center' })
-    yPosition += 10
-
-    // Center Goal
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'normal')
-    doc.text(`중심 목표: ${mandala.center_goal}`, pageWidth / 2, yPosition, { align: 'center' })
-    yPosition += 15
 
     // Calculate image dimensions to fit page
-    const availableWidth = pageWidth - 2 * margin
-    const availableHeight = pageHeight - yPosition - margin
-
-    let finalWidth = availableWidth
-    let finalHeight = (imgHeight * availableWidth) / imgWidth
+    let finalWidth = pageWidth
+    let finalHeight = (imgHeight * pageWidth) / imgWidth
 
     // If height is too large, scale by height instead
-    if (finalHeight > availableHeight) {
-      finalHeight = availableHeight
-      finalWidth = (imgWidth * availableHeight) / imgHeight
+    if (finalHeight > pageHeight) {
+      finalHeight = pageHeight
+      finalWidth = (imgWidth * pageHeight) / imgHeight
     }
 
     const xPosition = (pageWidth - finalWidth) / 2
+    const yPosition = (pageHeight - finalHeight) / 2
 
     // Add image
     doc.addImage(imgData, 'PNG', xPosition, yPosition, finalWidth, finalHeight)
