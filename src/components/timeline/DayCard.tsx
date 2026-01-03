@@ -29,7 +29,7 @@ export function DayCard({ day, title, status, onClick }: DayCardProps) {
       onClick={handleClick}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-gray-700">Day {day}</span>
+        <span className="text-sm font-semibold text-gray-700">단계 {day}</span>
         {status === 'completed' && (
           <svg
             className="w-5 h-5 text-primary-600"

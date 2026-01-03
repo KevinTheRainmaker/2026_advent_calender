@@ -80,7 +80,7 @@ export const DAY_PROMPTS = {
   },
   14: {
     title: '종합 리포트',
-    description: '14일간의 여정을 마무리하고 종합 리포트를 받아보세요.',
+    description: '14단계 여정을 마무리하고 종합 리포트를 받아보세요.',
     question: 'AI가 당신의 여정을 분석하여 종합 리포트를 생성합니다.',
   },
 } as const

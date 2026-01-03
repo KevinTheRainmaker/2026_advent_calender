@@ -14,7 +14,7 @@ export async function generateAIReport(mandala: Mandala): Promise<AISummary> {
   const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' })
 
   const prompt = `
-당신은 전문 목표 설정 코치입니다. 사용자가 14일 동안 작성한 만다라트 목표 설정 데이터를 분석하여 종합 리포트를 생성해주세요.
+당신은 전문 목표 설정 코치입니다. 사용자가 14단계에 걸쳐 작성한 만다라트 목표 설정 데이터를 분석하여 종합 리포트를 생성해주세요.
 
 ## 입력 데이터:
 

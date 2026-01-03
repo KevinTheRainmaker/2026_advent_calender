@@ -57,7 +57,7 @@ export function Dashboard() {
             안녕하세요! 👋
           </h1>
           <p className="text-gray-600">
-            14일간의 여정을 통해 2026년 목표를 설계해보세요
+            14단계 여정을 통해 2026년 목표를 설계해보세요
           </p>
         </div>
 
@@ -96,13 +96,13 @@ export function Dashboard() {
                   <div className="text-3xl font-bold text-primary-600">
                     {mandala.current_day}
                   </div>
-                  <div className="text-sm text-gray-600">현재 Day</div>
+                  <div className="text-sm text-gray-600">현재 단계</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary-600">
                     {mandala.completed_days?.length || 0}
                   </div>
-                  <div className="text-sm text-gray-600">완료한 Day</div>
+                  <div className="text-sm text-gray-600">완료한 단계</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary-600">

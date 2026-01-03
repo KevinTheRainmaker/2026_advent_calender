@@ -27,7 +27,7 @@ export function Landing() {
               2026 만다라트 목표 설계
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              14일간의 여정을 통해 2025년을 돌아보고,
+              14단계 여정을 통해 2025년을 돌아보고,
               <br />
               2026년 목표를 실행 가능한 계획으로 만들어보세요
             </p>
@@ -37,7 +37,7 @@ export function Landing() {
           <div className="grid md:grid-cols-3 gap-6 mt-12">
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="text-4xl mb-3">🔍</div>
-              <h3 className="font-semibold text-lg mb-2">Day 1-2</h3>
+              <h3 className="font-semibold text-lg mb-2">단계 1-2</h3>
               <p className="text-gray-600 text-sm">
                 2025년 회고를 통해 지난 한 해를 돌아봅니다
               </p>
@@ -45,7 +45,7 @@ export function Landing() {
 
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="text-4xl mb-3">🎯</div>
-              <h3 className="font-semibold text-lg mb-2">Day 3-13</h3>
+              <h3 className="font-semibold text-lg mb-2">단계 3-13</h3>
               <p className="text-gray-600 text-sm">
                 목표와 실행 계획을 구체화합니다
               </p>
@@ -53,7 +53,7 @@ export function Landing() {
 
             <div className="bg-white p-6 rounded-lg shadow-md">
               <div className="text-4xl mb-3">📊</div>
-              <h3 className="font-semibold text-lg mb-2">Day 14</h3>
+              <h3 className="font-semibold text-lg mb-2">단계 14</h3>
               <p className="text-gray-600 text-sm">
                 만다라트 그리드로 전체 계획을 시각화합니다
               </p>

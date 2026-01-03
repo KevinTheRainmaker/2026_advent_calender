@@ -1,37 +1,26 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Container, Header } from '@/components/layout'
-import { Day4SubGoals, DayWaitScreen } from '@/components/day'
+import { Day4SubGoals } from '@/components/day'
 import { useAuth, useMandala } from '@/hooks'
 import { Loading } from '@/components/common'
-
-const DEBUG_EMAIL = 'kangbeen.ko@gm.gist.ac.kr'
 
 export function Day4() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { mandala, isLoading, updateMandala } = useMandala(user?.id)
-  const [showWaitScreen, setShowWaitScreen] = useState(false)
-
-  const isDebugAccount = user?.email === DEBUG_EMAIL
 
   const handleSave = async (data: { sub_goals: string[] }) => {
     if (!mandala) return
 
-    // Update mandala with first 4 sub-goals and mark day as completed
+    // Update mandala with first 4 sub-goals and mark step as completed
     await updateMandala({
       sub_goals: data.sub_goals,
       completed_days: [...(mandala.completed_days || []), 4],
       current_day: 5,
     })
 
-    // Debug account can proceed immediately
-    if (isDebugAccount) {
-      navigate('/day/5')
-    } else {
-      // Show wait screen until midnight
-      setShowWaitScreen(true)
-    }
+    // Proceed to next step immediately
+    navigate('/day/5')
   }
 
   if (isLoading) {
@@ -53,11 +42,6 @@ export function Day4() {
         </div>
       </div>
     )
-  }
-
-  // Show wait screen after saving (non-debug accounts only)
-  if (showWaitScreen) {
-    return <DayWaitScreen currentDay={4} nextDay={5} />
   }
 
   return (
