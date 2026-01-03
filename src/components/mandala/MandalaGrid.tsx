@@ -8,7 +8,7 @@ interface MandalaGridProps {
   onUpdate?: (updates: MandalaUpdate) => Promise<void>
 }
 
-export function MandalaGrid({ mandala, onUpdate }: MandalaGridProps) {
+export function MandalaGrid({ mandala, onUpdate: _onUpdate }: MandalaGridProps) {
   const { center_goal, sub_goals, action_plans, ai_summary, name, commitment } = mandala
   const { setMandala } = useMandalaStore()
 

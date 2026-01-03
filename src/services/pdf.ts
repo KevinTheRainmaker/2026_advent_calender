@@ -134,7 +134,7 @@ export async function generateReportPDF(
  * Fixes: font loading timing, fractional borders, baseline clipping
  */
 export async function generateMandalaPDF(
-  element: HTMLElement | null,
+  _element: HTMLElement | null,
   mandala: Mandala,
   filename: string = "mandala-chart.pdf"
 ): Promise<boolean> {
