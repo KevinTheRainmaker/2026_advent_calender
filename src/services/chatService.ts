@@ -53,7 +53,7 @@ export async function generateNextQuestion(
     .map((qa, i) => `질문 ${i + 1}: ${qa.question}\n답변: ${qa.answer}`)
     .join('\n\n')
 
-  const prompt = `당신은 친근하고 공감적인 회고 코치입니다. 사용자가 "${theme.title}" 테마로 2025년을 회고하고 있습니다.
+  const prompt = `당신은 친근하고 공감적인 회고 코치입니다. 사용자가 "${theme.title}"라고 2025년을 회고하고 있습니다.
 
 ${context.previousAnswers.length > 0 ? `## 이전 대화:
 ${conversationHistory}
@@ -73,7 +73,7 @@ ${conversationHistory}
 
 응답 형식 (JSON):
 {
-  "summary": "${context.previousAnswers.length > 0 ? '이전 답변에 대한 1-2문장 공감/요약' : ''}",
+  "summary": "${context.previousAnswers.length > 0 ? '이전 답변에 대한 1-2문장 공감/요약' : '사용자의 회고에 공감하며 친근하게 인사를 건네주세요.'}",
   "question": "자연스럽게 변형된 질문"
 }`
 
@@ -117,7 +117,7 @@ export async function generateGoalSuggestion(
   }
 
   const genAI = new GoogleGenerativeAI(apiKey)
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+  const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' })
 
   const theme = REFLECTION_THEMES[reflectionTheme]
   
@@ -129,7 +129,7 @@ export async function generateGoalSuggestion(
     })
     .join('\n\n')
 
-  const prompt = `당신은 전문 목표 설정 코치입니다. 사용자가 "${theme.title}" 테마로 2025년을 회고했습니다.
+  const prompt = `당신은 전문 목표 설정 코치입니다. 사용자가 "${theme.title}"라고 2025년을 회고했습니다.
 
 ## 회고 내용:
 ${reflectionSummary}
@@ -140,10 +140,11 @@ ${reflectionSummary}
 1. 회고에서 드러난 사용자의 니즈와 가치를 파악하세요.
 2. 구체적이면서도 의미 있는 목표 1-2개를 제안하세요.
 3. 왜 이 목표를 제안하는지 간단히 설명해주세요.
+4. 핵심 목표는 '가장 이루고 싶은 1년 목표'의 형태여야 합니다.
 
 응답 형식 (JSON):
 {
-  "suggestion": "제안하는 핵심 목표 (예: 건강한 워라밸 만들기)",
+  "suggestion": "제안하는 핵심 목표 (예: 프로야구 구단 드래프트 1순위)",
   "reasoning": "회고 내용을 바탕으로 이 목표를 제안하는 이유 (2-3문장)"
 }`
 

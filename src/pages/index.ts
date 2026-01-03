@@ -1,6 +1,7 @@
 export { Landing } from './Landing'
 export { AuthCallback } from './AuthCallback'
 export { Dashboard } from './Dashboard'
+export { AdminDashboard } from './AdminDashboard'
 export { Day1 } from './Day1'
 export { Day3 } from './Day3'
 export { Day4 } from './Day4'

@@ -10,7 +10,7 @@ export const DAY_PROMPTS = {
   },
   2: {
     title: '회고 재검토',
-    description: '어제 작성한 회고를 다시 보며 생각을 정리해보세요.',
+    description: '작성한 회고를 다시 보며 생각을 정리해보세요.',
     question: '회고 내용을 다시 보며 든 생각을 자유롭게 작성해주세요.',
   },
   3: {

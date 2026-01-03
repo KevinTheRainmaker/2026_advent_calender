@@ -4,6 +4,7 @@ import {
   Landing,
   AuthCallback,
   Dashboard,
+  AdminDashboard,
   Day1,
   Day3,
   Day4,
@@ -33,6 +34,16 @@ function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin Dashboard */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
             </ProtectedRoute>
           }
         />

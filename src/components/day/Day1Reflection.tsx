@@ -63,7 +63,7 @@ export function Day1Reflection({ mandala, onSave }: Day1ReflectionProps) {
       // Add theme selection
       restoredMessages.push({
         type: 'answer',
-        content: `테마: ${theme.title}`,
+        content: theme.title,
       })
 
       // Restore answered questions
@@ -104,10 +104,15 @@ export function Day1Reflection({ mandala, onSave }: Day1ReflectionProps) {
     }
   }, [])
 
-  const generateLLMQuestion = async (questionIndex: number, currentAnswers: Record<number, string>) => {
-    if (!selectedTheme) return
+  const generateLLMQuestion = async (
+    questionIndex: number, 
+    currentAnswers: Record<number, string>,
+    themeKey?: ReflectionThemeKey
+  ) => {
+    const currentTheme = themeKey || selectedTheme
+    if (!currentTheme) return
 
-    const theme = REFLECTION_THEMES[selectedTheme]
+    const theme = REFLECTION_THEMES[currentTheme]
 
     // Check if we've completed all questions
     if (questionIndex >= theme.questions.length) {
@@ -133,7 +138,7 @@ export function Day1Reflection({ mandala, onSave }: Day1ReflectionProps) {
       }))
 
       const response = await generateNextQuestion({
-        theme: selectedTheme,
+        theme: currentTheme,
         currentQuestionIndex: questionIndex,
         previousAnswers,
       })
@@ -193,10 +198,8 @@ export function Day1Reflection({ mandala, onSave }: Day1ReflectionProps) {
       },
     ])
 
-    // Generate first question with LLM
-    setTimeout(() => {
-      generateLLMQuestion(0, {})
-    }, 500)
+    // Generate first question with LLM immediately, passing themeKey directly
+    generateLLMQuestion(0, {}, themeKey)
   }
 
   const handleSubmitAnswer = async () => {

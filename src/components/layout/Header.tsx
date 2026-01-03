@@ -79,6 +79,18 @@ export function Header() {
                       대시보드
                     </button>
                   )}
+                  {/* Admin menu - only for admin user */}
+                  {user?.email === 'kangbeen.ko@gm.gist.ac.kr' && (
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false)
+                        navigate('/admin')
+                      }}
+                      className="w-full px-4 py-2 text-left text-purple-600 hover:bg-purple-50 transition-colors"
+                    >
+                      🔧 관리자 대시보드
+                    </button>
+                  )}
                   <button
                     onClick={handleSignOut}
                     className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors"

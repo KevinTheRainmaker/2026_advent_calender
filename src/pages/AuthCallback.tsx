@@ -57,6 +57,7 @@ export function AuthCallback() {
 
             const newMandala = await createMandala({
               user_id: session.user.id,
+              user_email: session.user.email,
               year: 2026,
               marketing_consent: marketingConsent,
             })

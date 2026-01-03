@@ -26,6 +26,7 @@ export interface Mandala {
 
   // Foreign Keys
   user_id: string
+  user_email: string | null
 
   // Year
   year: number
@@ -67,6 +68,7 @@ export interface Mandala {
 
 export interface MandalaCreate {
   user_id: string
+  user_email?: string
   year: number
   marketing_consent: boolean
 }
