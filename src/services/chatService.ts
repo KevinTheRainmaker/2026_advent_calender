@@ -1,4 +1,3 @@
-import { supabase } from '@/lib/supabase'
 import { REFLECTION_THEMES } from '@/constants'
 import type { ReflectionThemeKey, ReflectionAnswers } from '@/types'
 
@@ -25,16 +24,25 @@ async function callGeminiFunction(
   action: 'generateQuestion' | 'generateGoalSuggestion' | 'generateReport',
   payload: Record<string, unknown>
 ): Promise<Record<string, unknown>> {
-  const { data, error } = await supabase.functions.invoke('gemini-chat', {
-    body: { action, payload },
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/gemini-chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': supabaseAnonKey,
+    },
+    body: JSON.stringify({ action, payload }),
   })
 
-  if (error) {
-    console.error('Edge function error:', error)
-    throw error
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    console.error('Edge function error:', errorData)
+    throw new Error(errorData.message || `HTTP ${response.status}`)
   }
 
-  return data
+  return response.json()
 }
 
 /**
