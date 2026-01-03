@@ -1,11 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/common'
 import { EmailAuthModal } from '@/components/auth'
 import { Container } from '@/components/layout'
 
+// Key for cross-tab auth communication (must match AuthCallback)
+const AUTH_SUCCESS_KEY = 'mandala_auth_success'
+
 export function Landing() {
+  const navigate = useNavigate()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState<'start' | 'continue'>('start')
+
+  // Listen for auth success from other tabs
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === AUTH_SUCCESS_KEY && event.newValue) {
+        try {
+          const data = JSON.parse(event.newValue)
+          console.log('Auth success detected from another tab:', data)
+          // Navigate to the redirect path from the other tab
+          navigate(data.redirect, { replace: true })
+        } catch (e) {
+          console.error('Failed to parse auth success data:', e)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [navigate])
 
   const handleStart = () => {
     setAuthMode('start')

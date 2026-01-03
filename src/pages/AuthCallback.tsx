@@ -4,6 +4,9 @@ import { supabase } from '@/lib/supabase'
 import { createMandala } from '@/lib/api'
 import { Loading } from '@/components/common'
 
+// Key for cross-tab auth communication
+const AUTH_SUCCESS_KEY = 'mandala_auth_success'
+
 export function AuthCallback() {
   const navigate = useNavigate()
 
@@ -46,10 +49,12 @@ export function AuthCallback() {
             return
           }
 
+          let redirectPath = '/dashboard'
+
           if (existingMandala) {
             // Existing user - redirect to dashboard
             console.log('Redirecting to dashboard')
-            navigate('/dashboard', { replace: true })
+            redirectPath = '/dashboard'
           } else {
             // New user - create mandala and redirect to Day 1
             console.log('Creating new mandala')
@@ -63,9 +68,34 @@ export function AuthCallback() {
             })
 
             console.log('Mandala created:', newMandala)
-            console.log('Redirecting to day 1')
-            navigate('/step/1', { replace: true })
+            console.log('Redirecting to step 1')
+            redirectPath = '/step/1'
           }
+
+          // Broadcast auth success to other tabs
+          localStorage.setItem(AUTH_SUCCESS_KEY, JSON.stringify({
+            timestamp: Date.now(),
+            redirect: redirectPath,
+          }))
+
+          // Small delay to ensure broadcast is received
+          setTimeout(() => {
+            // Clear the broadcast
+            localStorage.removeItem(AUTH_SUCCESS_KEY)
+            
+            // Show success message and try to close the tab
+            alert('로그인에 성공하였습니다!\n\n기존 탭으로 돌아가 진행해주세요.')
+            
+            // Try to close this tab (may not work due to browser security)
+            window.close()
+            
+            // Wait a bit to see if window closed, only navigate if it didn't
+            setTimeout(() => {
+              // If we're still here, window.close() didn't work, so navigate
+              navigate(redirectPath, { replace: true })
+            }, 500)
+          }, 100)
+
         } else {
           // No session, redirect to home
           console.log('No session found')

@@ -119,7 +119,7 @@ export function EmailAuthModal({ isOpen, onClose, mode }: EmailAuthModalProps) {
               onChange={(e) => setConsent(e.target.checked)}
             />
             <Checkbox
-              label="(선택) 현재 서비스와 향후 출시될 새로운 서비스 소식을 이메일로 받아보고 싶어요"
+              label="(선택) 현재 서비스 및 새로운 서비스 소식을 이메일로 받아보고 싶어요"
               checked={marketingConsent}
               onChange={(e) => setMarketingConsent(e.target.checked)}
             />

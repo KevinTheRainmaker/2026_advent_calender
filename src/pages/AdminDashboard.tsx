@@ -12,6 +12,7 @@ interface UserProgress {
   id: string
   user_id: string
   email: string
+  marketing_consent: boolean
   name: string | null
   current_day: number
   completed_days: number[]
@@ -62,6 +63,7 @@ export function AdminDashboard() {
           id: m.id,
           user_id: m.user_id,
           email: m.user_email || m.user_id.substring(0, 8) + '...',
+          marketing_consent: m.marketing_consent || false,
           name: m.name || null,
           current_day: m.current_day || 1,
           completed_days: m.completed_days || [],
@@ -99,7 +101,8 @@ export function AdminDashboard() {
       const usersData: UserProgress[] = (mandalas || []).map((m: any) => ({
         id: m.id,
         user_id: m.user_id,
-        email: m.user_id.substring(0, 8) + '...',
+        email: m.user_email || m.user_id.substring(0, 8) + '...',
+        marketing_consent: m.marketing_consent || false,
         name: m.name || null,
         current_day: m.current_day || 1,
         completed_days: m.completed_days || [],
@@ -140,10 +143,11 @@ export function AdminDashboard() {
     }
 
     // Create CSV content
-    const headers = ['이름', '이메일', '현재 단계', '핵심 목표', '가입일', '최근 활동']
+    const headers = ['이름', '이메일', '마케팅 동의', '현재 단계', '핵심 목표', '가입일', '최근 활동']
     const rows = selectedUsers.map(u => [
       u.name || '-',
       u.email || '-',
+      u.marketing_consent ? 'O' : 'X',
       `단계 ${u.current_day}`,
       u.center_goal || '-',
       new Date(u.created_at).toLocaleDateString('ko-KR'),
@@ -276,6 +280,9 @@ export function AdminDashboard() {
                     이메일
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    마케팅
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     현재 단계
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -312,6 +319,15 @@ export function AdminDashboard() {
                       <div className="text-sm text-gray-600">
                         {userProgress.email}
                       </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        userProgress.marketing_consent 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {userProgress.marketing_consent ? 'O' : 'X'}
+                      </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
